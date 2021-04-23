@@ -11,7 +11,7 @@ public class PlayerAudio : MonoBehaviour{
     public AudioMixerSnapshot idleSnapshot;
     public AudioMixerSnapshot auxinSnapshot;
     public AudioMixerSnapshot ambIdleSnapshot;
-    public AudioMixerSnapshot ambAuxinSnapshot;
+    public AudioMixerSnapshot ambInSnapshot;
 
     public LayerMask enemyMask;
 
@@ -19,23 +19,65 @@ public class PlayerAudio : MonoBehaviour{
     public void Update()
     {
         RaycastHit[] hits = Physics.SphereCastAll(transform.position, 5f, transform.forward, 0f, enemyMask);
-        if(hits.Length > 0)
-        {
-            if (!enemyNear)
-            {
 
-                auxinSnapshot.TransitionTo(0.5f);
-                enemyNear = true;
-            }
+
+        if (hits.Length > 0)
+        {
+            enemyNear = true;
+
         }
         else
         {
+           
+            enemyNear = false;
+
+        }
+
+        if (!AudioManager.manager.eventRunning)
+        {
             if (enemyNear)
             {
-                idleSnapshot.TransitionTo(0.5f);
-                enemyNear = false;
+                if (!AudioManager.manager.auxIn)
+                {
+                    auxinSnapshot.TransitionTo(0.5f);
+                    AudioManager.manager.currentAudioMixerSnapshot = auxinSnapshot;
+                    AudioManager.manager.auxIn = true;
+                }
+                else
+                {
+                    if (AudioManager.manager.currentAudioMixerSnapshot == AudioManager.manager.eventSnap)
+                    {
+                        auxinSnapshot.TransitionTo(0.5f);
+                        AudioManager.manager.currentAudioMixerSnapshot = auxinSnapshot;
+                        AudioManager.manager.auxIn = true;
+                    }
+                }
+
+            }
+            else
+            {
+                if (!AudioManager.manager.auxIn)
+                {
+                    idleSnapshot.TransitionTo(0.5f);
+                    AudioManager.manager.currentAudioMixerSnapshot = idleSnapshot;
+                    AudioManager.manager.auxIn = true;
+                }
+                else
+                {
+                    if (AudioManager.manager.currentAudioMixerSnapshot == AudioManager.manager.eventSnap)
+                    {
+                        idleSnapshot.TransitionTo(0.5f);
+                        AudioManager.manager.currentAudioMixerSnapshot = idleSnapshot;
+                        AudioManager.manager.auxIn = true;
+                    }
+                }
+
+
             }
         }
+
+           
+
     }
     // Start is called before the first frame update
     private void OnTriggerEnter(Collider other)
@@ -48,6 +90,10 @@ public class PlayerAudio : MonoBehaviour{
         {
             auxinSnapshot.TransitionTo(0.5f);
         }
+        if (other.CompareTag("Ambiance"))
+        {
+            ambInSnapshot.TransitionTo(0.5f);
+        }
     }
     private void OnTriggerExit(Collider other)
     {
@@ -58,6 +104,10 @@ public class PlayerAudio : MonoBehaviour{
         if (other.CompareTag("EnemyZone"))
         {
             idleSnapshot.TransitionTo(0.5f);
+        }
+        if (other.CompareTag("Ambiance"))
+        {
+            ambIdleSnapshot.TransitionTo(0.5f);
         }
     }
 }
